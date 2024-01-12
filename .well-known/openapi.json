@@ -1,0 +1,2198 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "HumanGraphics API",
+        "description": "HumanGraphics is a family of products designed to create structured data from unstructured human characteristics and behavior. It currently provides the following high-level operations:\n\n# Name Parsing and Analysis\n\nThe endpoints with the Names tag take unstructured human names and parse them into a structured representation of the name. In addition, for each parsed name, the endpoints also provide demographic estimates about the named person's country of origin and gender (for all geographies); plus age and race (for some geographies only).\n\n# Location Resolution and Analysis\n\nThe endpoints with the Locations tag take unstructured location names and resolve them into a structured representation of the location. Location resolution provides only city-level granularity at this time, so it is not suitable for the geocoding of addresses.\n\n# Face Analysis\n\nThe endpoints with the Faces tag take image data and recognized and/or analyze human face(s) in the given image. Facial analysis returns structured estimates of the age, gender, and race of the person.\n\n# Combined Analysis\n\nVarious endpoints allow users to provide multiple data points about a person, for example their name and face, to create a more detailed ensemble estimate of the person's demographic profile that is richer and more accurate than analysis from one data point alone.\n\nThe HumanGraphics API is priced in \"credits,\" which are purchased on a subscription basis. Each endpoint's cost in credits is captured in its respective documentation. Non-2XX responses count against rate limits, but are billed at zero credits. Note that 2XX responses can still return no data (e.g., name match failure) and are still billed as documented. Bulk endpoints count as one call for rate limiting purposes.\n",
+        "contact": {
+            "email": "api@humangraphics.io"
+        },
+        "version": "1.3.0"
+    },
+    "servers": [
+        {
+            "url": "https://api.humangraphics.io"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Humans",
+            "description": "Process human name, face, and demographic data"
+        },
+        {
+            "name": "Names",
+            "description": "Process human names"
+        },
+        {
+            "name": "Faces",
+            "description": "Process human faces"
+        },
+        {
+            "name": "Locations",
+            "description": "Process location data"
+        },
+        {
+            "name": "Utility",
+            "description": "Perform basic utility functions"
+        }
+    ],
+    "paths": {
+        "/v1/ping": {
+            "get": {
+                "tags": [
+                    "Utility"
+                ],
+                "operationId": "ping",
+                "summary": "Check configuration",
+                "description": "Performs no action. Useful for confirming that request configuration (e.g., authentication) is correct.\n\nCost: 1 credit.\n",
+                "responses": {
+                    "204": {
+                        "description": "The request completed successfully."
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    }
+                }
+            }
+        },
+        "/v1/locations/names/resolve": {
+            "post": {
+                "tags": [
+                    "Locations"
+                ],
+                "summary": "Resolve a location name",
+                "description": "Resolved a location name string (e.g., \"Alexandria, VA\") into its most likely real-world location (e.g., Alexandria, VA, US). A location has at most three components:\n\n1. **City** - The lowest-level administrative entity that either is or contains the location and has an [ISO 3166-1 code](https://en.wikipedia.org/wiki/ISO_3166-1), e.g., [US](https://en.wikipedia.org/wiki/United_States), [FR](https://en.wikipedia.org/wiki/France), etc.\n2. **State** - The highest-level administrative entity that either is or contains the location and has an [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) code, e.g., [US-VA](https://en.wikipedia.org/wiki/Virginia), [FR-OCC](https://en.wikipedia.org/wiki/Occitania_%28administrative_region%29), etc.\n3. **City** - A human settlement that has no ISO 3166-1 or 3166-2 codes, e.g., [Alexandria, VA](https://en.wikipedia.org/wiki/Alexandria,_Virginia), [Tolouse, FR](https://en.wikipedia.org/wiki/Toulouse).\n\nAll location matches have a country. In general, if a location match has a city, then it also has a state, although some exceptions exist.\n\nNote that a resolved location is very different from a geocoded address. In particular, locations are not considered PII, whereas addresses are.\n\n Cost: 1 credit, whether the match is successful or not.\n",
+                "operationId": "resolveLocationName",
+                "requestBody": {
+                    "description": "The location name to resolve",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LocationNameResolveRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The resolve procedure completed successfully. It still may not contain a match.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LocationNameResolveResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/locations/names/resolve/bulk": {
+            "post": {
+                "tags": [
+                    "Locations"
+                ],
+                "summary": "Resolve a list of location names",
+                "description": "Resolve a list of up to 10 location names in one operation. Note that bulk operations are intended to increase throughput, not reduce cost.\n\nCost: 1 credit per name, whether each match is successful or not.\n",
+                "operationId": "resolveLocationNameBulk",
+                "requestBody": {
+                    "description": "The list of location names to resolve",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LocationNameResolveBulkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The resolve procedure completed successfully. It still may not contain a match.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LocationNameResolveBulkResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/names/parse": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Names"
+                ],
+                "summary": "Parse a human name",
+                "description": "Parses a human name string (e.g., \"George Washington\") into its most likely parts (e.g., forename \"George\", surname \"Washington\"), with demographic estimates (i.e., age, sex, race, and country of origin). A name has at most six components:\n\n1. **Given Name** - In most cultures, a person's given name is a name given to them at birth by parents. Given names are also called first names, forenames, and Christian names. In \"John Ronald Reuel Tolkien,\" \"John\" is the given name.\n2. **Middle Name** - In many cultures, people also receive one or more \"middle names.\" These names are typically either just a second given name, a woman's [maiden name](https://en.wikipedia.org/wiki/Maiden_and_married_names), a name of family significance (e.g., the mother's maiden name), or a [patronymic](https://en.wikipedia.org/wiki/Patronymic)/[matronymic](https://en.wikipedia.org/wiki/Matronymic) name. In \"John Ronald Reuel Tolkien,\" \"Ronald\" is the middle name.\n3. **Second Middle Name** - In some cultures, children are given two middle names, either at birth or at a young age, as in Catholic confirmation (e.g., [George R. R. Martin](https://en.wikipedia.org/wiki/George_R._R._Martin#Early_life)). In \"John Ronald Reuel Tolkien,\" \"Reuel\" is the second middle name.\n4. **Nickname** - It's not uncommon for people to accumulate various and sundry sobriquets throughout their lives, or simply to prefer to go by a name different from their given name. In \"Pete 'Maverick' Mitchell,\" \"Maverick\" is the nickname.\n5. **Family Name** - In most cultures, a person's family name is inherited from one or both of their parents. Family names are also called last names and surnames. In \"John Ronald Reuel Tolkien,\" \"Tolkien\" is the family name.\n6. **Second Family Name** - In some cultures (particularly [hispanic](https://en.wikipedia.org/wiki/Spanish_naming_customs) cultures), children receive two surnames at birth. In \"José Fernández Martínez,\" \"Fernández\" is the family name, and \"Martínez\" is the second family name.\n\nMore components may be added to the name model over time, e.g., titles.\n\nNote that while individual parts of a name held separately are not PII (e.g., \"John\" and \"Tolkien,\" separately), a full name (e.g., \"John Ronald Reuel Tolkien\") is PII.\n\nCost: 1 credit, whether the match is successful or not.\n",
+                "operationId": "parseHumanName",
+                "requestBody": {
+                    "description": "The human name to parse",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HumanNameParseRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The parse procedure completed successfully. It still may not contain a match.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanNameParseResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/names/parse/bulk": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Names"
+                ],
+                "summary": "Parse human names in bulk",
+                "description": "Parse a list of up to 10 human names in one operation. Note that bulk operations are intended to increase throughput, not reduce cost.\n\nCost: 1 credit per name, whether each match is successful or not.\n",
+                "operationId": "parseHumanNameBulk",
+                "requestBody": {
+                    "description": "The human names to parse",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HumanNameParseBulkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The parse procedure completed successfully. It still may not contain a match.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanNameParseBulkResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/names/multiparse": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Names"
+                ],
+                "summary": "Parse one or more human names",
+                "description": "Parses one or more human names from the given string. This is intended for byline-style text (i.e., lists of names) as opposed to plain text (i.e., named entity recognition).\n\nCost: 1 credit, regardless of whether or not the match succeeds and the number of names returned.\n",
+                "operationId": "multiparseHumanNames",
+                "requestBody": {
+                    "description": "The human name(s) to parse",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HumanNameMultiparseRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The parse procedure completed successfully. It still may not contain a match.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanNameMultiparseResponse",
+                                    "example": {
+                                        "confidence": 0.937,
+                                        "matches": [
+                                            {
+                                                "template": {
+                                                    "text": "<GIVEN_NAME> <FAMILY_NAME>"
+                                                },
+                                                "givenName": {
+                                                    "matchedText": "fox"
+                                                },
+                                                "familyName": {
+                                                    "matchedText": "mulder"
+                                                },
+                                                "country": "US",
+                                                "countryEstimate": {
+                                                    "US": 0.53,
+                                                    "CA": 0.27,
+                                                    "GB": 0.18
+                                                },
+                                                "age": "from25To34",
+                                                "ageEstimate": {
+                                                    "from25To34": 0.27,
+                                                    "from18To24": 0.25,
+                                                    "from35To44": 0.18,
+                                                    "under18": 0.1,
+                                                    "from45To54": 0.1,
+                                                    "from55To64": 0.08,
+                                                    "over65": 0.02
+                                                },
+                                                "gender": "male",
+                                                "genderEstimate": {
+                                                    "male": 0.9,
+                                                    "female": 0.1
+                                                },
+                                                "race": "white",
+                                                "raceEstimate": {
+                                                    "white": 0.5,
+                                                    "hispanic": 0.2,
+                                                    "americanIndian": 0.1,
+                                                    "asianPacificIslander": 0.08,
+                                                    "twoPlusRaces": 0.07,
+                                                    "black": 0.05
+                                                }
+                                            },
+                                            {
+                                                "template": {
+                                                    "text": "<GIVEN_NAME> <FAMILY_NAME>"
+                                                },
+                                                "givenName": {
+                                                    "matchedText": "dana"
+                                                },
+                                                "familyName": {
+                                                    "matchedText": "scully"
+                                                },
+                                                "country": "US",
+                                                "countryEstimate": {
+                                                    "US": 0.53,
+                                                    "CA": 0.27,
+                                                    "GB": 0.18
+                                                },
+                                                "age": "from25To34",
+                                                "ageEstimate": {
+                                                    "from25To34": 0.27,
+                                                    "from18To24": 0.25,
+                                                    "from35To44": 0.18,
+                                                    "under18": 0.1,
+                                                    "from45To54": 0.1,
+                                                    "from55To64": 0.08,
+                                                    "over65": 0.02
+                                                },
+                                                "gender": "female",
+                                                "genderEstimate": {
+                                                    "female": 0.9,
+                                                    "male": 0.1
+                                                },
+                                                "race": "white",
+                                                "raceEstimate": {
+                                                    "white": 0.5,
+                                                    "hispanic": 0.2,
+                                                    "americanIndian": 0.1,
+                                                    "asianPacificIslander": 0.08,
+                                                    "twoPlusRaces": 0.07,
+                                                    "black": 0.05
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/names/multiparse/bulk": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Names"
+                ],
+                "summary": "Parse one or more human name(s) in bulk. Note that bulk operations are intended to increase throughput, not reduce cost.\n\nCost: 1 credit per string, regardless of whether or not each match succeeds and the number of names each match returns.\n",
+                "description": "Parse a list of up to 10 human name(s) in one operation",
+                "operationId": "multiparseHumanNamesBulk",
+                "requestBody": {
+                    "description": "The list of human name(s) to parse",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HumanNameMultiparseBulkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The parse procedure completed successfully. It still may not contain a match.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanNameMultiparseBulkResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/names/analyze": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Names"
+                ],
+                "summary": "Analyze a human name from parts",
+                "description": "Analyze a human name provided in parts, i.e., given name and family name.\n\nCost: 1 credit, regardless of whether or not the match succeeds.\n",
+                "operationId": "analyzeHumanName",
+                "requestBody": {
+                    "description": "The human name to analyze",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HumanNameAnalyzeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The parse procedure completed successfully. It still may not contain a match.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanNameAnalyzeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/names/analyze/bulk": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Names"
+                ],
+                "summary": "Analyze a list of human names from parts",
+                "description": "Analyze a list of up to 10 human names provided in parts, i.e., given name and family name, in one operation. Note that bulk operations are intended to increase throughput, not reduce cost.\n\nCost: 1 credit per name, regardless of whether or not each match succeeds.\n",
+                "operationId": "analyzeHumanNameBulk",
+                "requestBody": {
+                    "description": "The list of human names to analyze",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HumanNameAnalyzeBulkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The parse procedure completed successfully. It still may not contain a match.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanNameAnalyzeBulkResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/faces/detect": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Faces"
+                ],
+                "summary": "Detect human faces",
+                "description": "Detect all human faces in an image.\n\nIn general, faces down to 40 pixels on a side are detected successfully. Smaller faces and faces oriented at an extreme angle to the camera or to the vertical may not be detected.\n\nCost: 1 credit, regardless of the number of faces detected.\n",
+                "operationId": "detectHumanFaces",
+                "requestBody": {
+                    "description": "The image to process",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HumanFaceDetectRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The detection procedure completed successfully. It still may not have detected any faces.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanFaceDetectResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/faces/analyze": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Faces"
+                ],
+                "summary": "Analyze one human face",
+                "description": "Analyze one human face in the given image.\n\nIf a region is given, then it must match a region returned previously by the `detectHumanFaces` endpoint exactly, and the face in that region is analyzed. Otherwise, the image is assumed to contain exactly one face, and that face is analyzed. If the photograph does not actually have exactly one face, then analysis fails with an appropriate error code.\n\nCost: 3 credits, regardless of whether the face analysis succeeds or not.\n",
+                "operationId": "analyzeHumanFace",
+                "requestBody": {
+                    "description": "The image and region to process",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/HumanFaceAnalyzeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The analysis procedure completed successfully. It still may not have produced an analysis.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanFaceAnalyzeResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        },
+        "/v1/humans/analyze": {
+            "post": {
+                "tags": [
+                    "Humans",
+                    "Locations",
+                    "Names",
+                    "Faces"
+                ],
+                "summary": "Analyze a person's name, location, and image together.",
+                "description": "Analyze a person, as described by their name, location, and/or a picture containing only their face. Any combination of the above inputs may be given, except none. Estimates for their age, gender, race, and country are combined to produce one estimate based on all these data.\n\nCost: The sum of the below for inputs included.\n\n* Name: 1 credit\n* Location: 1 credit\n* Face: 3 credits\n\nSo, a call that includes all 3 inputs costs 5 credits.\n",
+                "operationId": "analyzeHuman",
+                "requestBody": {
+                    "description": "The image and region to process",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AnalyzeHumanRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The analysis procedure completed successfully. It still may not have produced an analysis.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AnalyzeHumanResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403Forbidden"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422UnprocessableEntity"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "responses": {
+            "401Unauthorized": {
+                "description": "The request did not include valid credentials",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorMessage",
+                            "example": {
+                                "type": "https://docs.humangraphics.io/problems/401Unauthorized",
+                                "title": "The request did not include valid credentials.",
+                                "status": 401,
+                                "detail": "To protect the commercial viability of the API, only registered users are allowed to make requests. Please provide adequate credentials in future requests to identify yourself as a registered user."
+                            }
+                        }
+                    }
+                }
+            },
+            "403Forbidden": {
+                "description": "The current user is not allowed to perform the requested action",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorMessage",
+                            "example": {
+                                "type": "https://docs.humangraphics.io/problems/403Forbidden",
+                                "title": "The current user is not allowed to access this resource.",
+                                "status": 403,
+                                "detail": "The provided credentials were adequate to identify you as a registered user, but you are not allowed to access this resource. Do you need to upgrade your plan?"
+                            }
+                        }
+                    }
+                }
+            },
+            "404NotFound": {
+                "description": "The requested object could not be found.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorMessage",
+                            "example": {
+                                "type": "https://docs.humangraphics.io/problems/404Forbidden",
+                                "title": "The requested object could not be found.",
+                                "status": 404,
+                                "detail": "The requested object could not be found. If it ever existed, then it was deleted."
+                            }
+                        }
+                    }
+                }
+            },
+            "410Gone": {
+                "description": "The requested object once existed, but is now gone. Did it expire?",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorMessage",
+                            "example": {
+                                "type": "https://docs.humangraphics.io/problems/404Forbidden",
+                                "title": "The requested object is gone.",
+                                "status": 410,
+                                "detail": "The requested object once existed, but is now gone. Did it expire?"
+                            }
+                        }
+                    }
+                }
+            },
+            "422UnprocessableEntity": {
+                "description": "The request body was not valid. The error message should provide more information about how the user can fix the problem.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorMessage",
+                            "example": {
+                                "type": "https://docs.humangraphics.io/problems/invalid-request-body",
+                                "title": "The request body is not valid.",
+                                "status": 422,
+                                "detail": "The request body did not contain a valid JSON request. Please confirm that (a) the request body contains valid JSON, and (b) all parts of the request body their respective schemas, e.g., enums."
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "ErrorMessage": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://docs.humangraphics.io/problems/401Unauthorized"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "The request did not include valid credentials"
+                    },
+                    "status": {
+                        "type": "integer",
+                        "format": "int32",
+                        "example": 401
+                    },
+                    "detail": {
+                        "type": "string",
+                        "example": "To protect the commercial viability of the API, only registered users are allowed to make requests. Please provide adequate credentials in future requests to identify yourself as a registered user."
+                    },
+                    "instance": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Country": {
+                "type": "string",
+                "description": "An ISO 3166-1 alpha-2 country code.",
+                "example": "US",
+                "format": "country"
+            },
+            "State": {
+                "type": "string",
+                "description": "An ISO 3166-2 country subdivision code",
+                "example": "US-VA",
+                "format": "state"
+            },
+            "LocationNameResolveRequest": {
+                "type": "object",
+                "description": "A request to the `resolveLocationName` endpoint.",
+                "required": [
+                    "text"
+                ],
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "The location string to resolve",
+                        "example": "Alexandria, VA",
+                        "maxLength": 240,
+                        "nullable": false
+                    },
+                    "hl": {
+                        "type": "string",
+                        "maxLength": 2,
+                        "description": "The primary language in which to return location labels. The language should be provided as an [ISO 639-1 code](https://en.wikipedia.org/wiki/ISO_639-1). If provided, then the first name of each location will be in the given language, if such a name exists. Names in other languages may also be included in the response. Unrecognized languages are ignored."
+                    }
+                }
+            },
+            "LocationNameResolveBulkRequest": {
+                "type": "object",
+                "description": "A request to the `resolveLocationNameBulk` endpoint.",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "description": "The individual operations to perform",
+                        "minItems": 1,
+                        "maxItems": 10,
+                        "items": {
+                            "$ref": "#/components/schemas/LocationNameResolveBulkRequestItem"
+                        }
+                    }
+                }
+            },
+            "LocationNameResolveBulkRequestItem": {
+                "type": "object",
+                "description": "One request in a `LocationNameResolveBulkRequest`",
+                "required": [
+                    "id",
+                    "request"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "An identifier for this item within its bulk request. Must be unique among all items in the request.",
+                        "example": 1,
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "request": {
+                        "$ref": "#/components/schemas/LocationNameResolveRequest"
+                    }
+                }
+            },
+            "LocationNameResolveResponse": {
+                "type": "object",
+                "description": "A response from the `resolveLocationName` endpoint.",
+                "properties": {
+                    "confidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the match is correctly resolved among all valid, successful parses for this location"
+                    },
+                    "match": {
+                        "$ref": "#/components/schemas/LocationNameMatch",
+                        "description": "If a location was matched, then this value is the match. Otherwise, `null`."
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/Country"
+                    },
+                    "countryEstimate": {
+                        "$ref": "#/components/schemas/CountryEstimate"
+                    }
+                }
+            },
+            "LocationNameResolveBulkResponse": {
+                "type": "object",
+                "description": "A response from the `resolveLocationNameBulk` endpoint.",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "description": "The individual operations performed. If the overall operation succeeded, then every operation in the request will have an item in the corresponding response, even if the response is an error.",
+                        "minItems": 0,
+                        "maxItems": 10,
+                        "items": {
+                            "$ref": "#/components/schemas/LocationNameResolveBulkResponseItem"
+                        }
+                    }
+                }
+            },
+            "LocationNameResolveBulkResponseItem": {
+                "type": "object",
+                "description": "One response in a `LocationNameResolveBulkResponse`",
+                "required": [
+                    "id",
+                    "response"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the corresponding operation in the bulk request.",
+                        "example": 1,
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "response": {
+                        "$ref": "#/components/schemas/LocationNameResolveResponse"
+                    }
+                }
+            },
+            "LocationType": {
+                "description": "* `country` - A location with an ISO-3166-1 code\n* `state` - A location with an ISO 3166-2 code\n* `city` - A human settlement with no ISO 3166 code\n",
+                "type": "string",
+                "enum": [
+                    "country",
+                    "state",
+                    "city"
+                ]
+            },
+            "LocationNameMatch": {
+                "type": "object",
+                "description": "A location match from resolving a location name.",
+                "example": {
+                    "matchType": "city",
+                    "template": {
+                        "text": "<CITY> \",\" <STATE>"
+                    },
+                    "matchedText": "alexandria va",
+                    "country": {
+                        "type": "country",
+                        "names": [
+                            {
+                                "language": "en",
+                                "text": "United States of America"
+                            }
+                        ],
+                        "coordinates": {
+                            "latitude": 37.0902,
+                            "longitude": -95.7129
+                        },
+                        "id": "US"
+                    },
+                    "state": {
+                        "type": "state",
+                        "names": [
+                            {
+                                "language": "en",
+                                "text": "Virginia"
+                            }
+                        ],
+                        "coordinates": {
+                            "latitude": 37.4316,
+                            "longitude": -78.6569
+                        },
+                        "country": "US",
+                        "id": "US-VA"
+                    },
+                    "city": {
+                        "type": "city",
+                        "names": [
+                            {
+                                "language": "en",
+                                "text": "Alexandria"
+                            }
+                        ],
+                        "coordinates": {
+                            "latitude": 38.8048,
+                            "longitude": -77.0469
+                        },
+                        "country": "US",
+                        "state": "US-VA",
+                        "id": "123456789abc"
+                    }
+                },
+                "required": [
+                    "type",
+                    "matchedText",
+                    "country"
+                ],
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/LocationType",
+                        "description": "The type of location that was matched"
+                    },
+                    "matchedText": {
+                        "description": "The portion of text from the given input that was matched to this location",
+                        "type": "string",
+                        "maxLength": 240
+                    },
+                    "template": {
+                        "$ref": "#/components/schemas/LocationNameTemplatePreview"
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/CountryLocation",
+                        "description": "The country part of the matched location. All location matches have a country part."
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/StateLocation",
+                        "description": "The state part of the matched location if it exists, or `null` otherwise. If the location match has a city part, then this field is usually populated, but not always."
+                    },
+                    "city": {
+                        "$ref": "#/components/schemas/CityLocation",
+                        "description": "The city part of the matched location if it exists, or `null` otherwise."
+                    }
+                }
+            },
+            "LocationNameTemplatePreview": {
+                "type": "object",
+                "description": "The name syntax that was matched during this resolution",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "maxLength": 240,
+                        "example": "\"<CITY_NAME> \",\" <STATE_NAME>\""
+                    }
+                }
+            },
+            "LocalizedText": {
+                "type": "object",
+                "description": "Localized text in the given language.",
+                "properties": {
+                    "language": {
+                        "type": "string",
+                        "description": "The language of the text, currently expressed as an [ISO 639-1 code](https://en.wikipedia.org/wiki/ISO_639-1). Additional language codes may be used in the future."
+                    },
+                    "text": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Coordinates": {
+                "type": "object",
+                "required": [
+                    "latitude",
+                    "longitude"
+                ],
+                "description": "A latitude/longitude point in the WGS84 coordinating system.",
+                "properties": {
+                    "latitude": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": -180,
+                        "maximum": 180
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": -180,
+                        "maximum": 180
+                    }
+                }
+            },
+            "CountryLocation": {
+                "description": "The country part of a location match.",
+                "type": "object",
+                "required": [
+                    "id",
+                    "names"
+                ],
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/Country",
+                        "description": "This country's ID, which is its [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) code."
+                    },
+                    "names": {
+                        "description": "The name(s) of this location in various languages. If a host language (`hl`) was requested, the the first element in this array will be the name of the location in the given language, if it exists. This list of names is never empty.",
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "$ref": "#/components/schemas/LocalizedText"
+                        }
+                    },
+                    "coordinates": {
+                        "$ref": "#/components/schemas/Coordinates",
+                        "description": "A point contained by this location at or near its centroid."
+                    }
+                }
+            },
+            "StateLocation": {
+                "description": "The state part of a location match.",
+                "type": "object",
+                "required": [
+                    "names",
+                    "country",
+                    "id"
+                ],
+                "properties": {
+                    "names": {
+                        "description": "The name(s) of this location in various languages. If a host language (`hl`) was requested, the the first element in this array will be the name of the location in the given language, if it exists. This list of names is never empty.",
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "$ref": "#/components/schemas/LocalizedText"
+                        }
+                    },
+                    "coordinates": {
+                        "$ref": "#/components/schemas/Coordinates",
+                        "description": "A point contained by this location at or near its centroid."
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/Country",
+                        "description": "The country that contains this state."
+                    },
+                    "region": {
+                        "$ref": "#/components/schemas/Country",
+                        "description": "This state's [ISO 3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) code if it exists, otherwise `null`. A territory with both ISO 3166-1 and ISO 3166-2 codes typically indicates either a self-governing minor outlying area (e.g., [Åland](https://en.wikipedia.org/wiki/%C3%85land)), a historical colonial relationship (e.g., [French Guiana](https://en.wikipedia.org/wiki/French_Guiana)), or a disputed territory (e.g., [Taiwan](https://en.wikipedia.org/wiki/Taiwan)). If populated, this field's value generally will not match the `country` field's value."
+                    },
+                    "id": {
+                        "$ref": "#/components/schemas/State",
+                        "description": "This state's ID, which is its [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) code."
+                    }
+                }
+            },
+            "CityLocation": {
+                "description": "The city part of a location match.",
+                "type": "object",
+                "required": [
+                    "names",
+                    "country",
+                    "id"
+                ],
+                "properties": {
+                    "names": {
+                        "description": "The name(s) of this location in various languages. If a host language (`hl`) was requested, the the first element in this array will be the name of the location in the given language, if it exists. This list of names is never empty.",
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "$ref": "#/components/schemas/LocalizedText"
+                        }
+                    },
+                    "coordinates": {
+                        "$ref": "#/components/schemas/Coordinates",
+                        "description": "A point contained by this location at or near its centroid."
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/Country",
+                        "description": "The country that contains this city."
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/State",
+                        "description": "The state that contains this city."
+                    },
+                    "region": {
+                        "$ref": "#/components/schemas/State",
+                        "description": "This city's [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2) code if it exists, otherwise `null`. A city with an ISO 3166-2 code typically indicates either a self-governing area (e.g., [Hong Kong](https://en.wikipedia.org/wiki/Hong_Kong)); a large, old city (e.g., [Bangkok](https://en.wikipedia.org/wiki/Bangkok)); or a city-state (e.g., [Monaco](https://en.wikipedia.org/wiki/Monaco)). If populated, this field's value generally will match the `state` field's value."
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "City",
+                        "description": "The ID of this city, which is an arbitrary value unrelated to the city itself."
+                    }
+                }
+            },
+            "HumanNameParseRequest": {
+                "type": "object",
+                "description": "A request to the `parseHumanName` endpoint.",
+                "required": [
+                    "text"
+                ],
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "The human name to parse",
+                        "example": "Fox Mulder",
+                        "maxLength": 240,
+                        "nullable": false
+                    },
+                    "countryHint": {
+                        "$ref": "#/components/schemas/Country",
+                        "description": "An optional suggestion for the country of origin. If given, then the named people are assumed to come from the given country regardless of the computed country estimate. This can affect the downstream age, gender, and race estimates also returned by this endpoint."
+                    }
+                }
+            },
+            "HumanNameParseBulkRequest": {
+                "type": "object",
+                "description": "A request to the `parseHumanNameBulk` endpoint.",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 10,
+                        "nullable": false,
+                        "items": {
+                            "$ref": "#/components/schemas/HumanNameParseBulkRequestItem"
+                        }
+                    }
+                }
+            },
+            "HumanNameParseBulkRequestItem": {
+                "type": "object",
+                "description": "One request in a `HumanNameParseBulkRequest`.",
+                "required": [
+                    "id",
+                    "request"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "An identifier for this item within its bulk request. Must be unique among all items in the request.",
+                        "example": 1,
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "request": {
+                        "$ref": "#/components/schemas/HumanNameParseRequest"
+                    }
+                }
+            },
+            "HumanNameParseResponse": {
+                "type": "object",
+                "description": "A response from the `parseHumanName` endpoint.",
+                "properties": {
+                    "confidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the match is the correct parse among all valid, successful parses for this name"
+                    },
+                    "match": {
+                        "$ref": "#/components/schemas/HumanNameMatch",
+                        "description": "If a name was matched, then this value is the match. Otherwise, `null`."
+                    },
+                    "age": {
+                        "$ref": "#/components/schemas/Age"
+                    },
+                    "ageEstimate": {
+                        "$ref": "#/components/schemas/AgeEstimate"
+                    },
+                    "gender": {
+                        "$ref": "#/components/schemas/Gender"
+                    },
+                    "genderEstimate": {
+                        "$ref": "#/components/schemas/GenderEstimate"
+                    },
+                    "race": {
+                        "$ref": "#/components/schemas/Race"
+                    },
+                    "raceEstimate": {
+                        "$ref": "#/components/schemas/RaceEstimate"
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/Country"
+                    },
+                    "countryEstimate": {
+                        "$ref": "#/components/schemas/CountryEstimate"
+                    }
+                }
+            },
+            "HumanNameParseBulkResponse": {
+                "type": "object",
+                "description": "A response from the `parseHumanNameBulk` endpoint.",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/HumanNameParseBulkResponseItem"
+                        }
+                    }
+                }
+            },
+            "HumanNameParseBulkResponseItem": {
+                "type": "object",
+                "description": "One response in a `HumanNameParseBulkResponse`.",
+                "required": [
+                    "id",
+                    "response"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the corresponding operation in the bulk request.",
+                        "example": 1,
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "response": {
+                        "$ref": "#/components/schemas/HumanNameParseResponse"
+                    }
+                }
+            },
+            "HumanNameMultiparseRequest": {
+                "type": "object",
+                "description": "A request to the `multiparseHumanNames` endpoint.",
+                "required": [
+                    "text"
+                ],
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "The human name(s) to parse",
+                        "example": "Fox Mulder, Dana Scully",
+                        "maxLength": 240,
+                        "nullable": false
+                    },
+                    "countryHint": {
+                        "$ref": "#/components/schemas/Country",
+                        "description": "An optional suggestion for the country of origin. If given, then the named people are assumed to come from the given country regardless of the computed country estimate. This can affect the downstream age, gender, race, and language estimates also returned by this endpoint."
+                    }
+                }
+            },
+            "HumanNameMultiparseBulkRequest": {
+                "type": "object",
+                "description": "A request to the `multiparseHumanNamesBulk` endpoint.",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 10,
+                        "nullable": false,
+                        "items": {
+                            "$ref": "#/components/schemas/HumanNameMultiparseBulkRequestItem"
+                        }
+                    }
+                }
+            },
+            "HumanNameMultiparseBulkRequestItem": {
+                "type": "object",
+                "description": "One request in a `HumanNameMultiparseBulkRequest`.",
+                "required": [
+                    "id",
+                    "request"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "An identifier for this item within its bulk request. Must be unique among all items in the request.",
+                        "example": 1,
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "request": {
+                        "$ref": "#/components/schemas/HumanNameMultiparseRequest"
+                    }
+                }
+            },
+            "HumanNameMultiparseNameMatch": {
+                "type": "object",
+                "description": "A single name match in a multiparse response",
+                "properties": {
+                    "template": {
+                        "$ref": "#/components/schemas/HumanNameTemplatePreview",
+                        "description": "The syntax of the matched name"
+                    },
+                    "givenName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "middleName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "secondMiddleName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "nickName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "familyName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "secondFamilyName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "age": {
+                        "$ref": "#/components/schemas/Age"
+                    },
+                    "ageEstimate": {
+                        "$ref": "#/components/schemas/AgeEstimate"
+                    },
+                    "gender": {
+                        "$ref": "#/components/schemas/Gender"
+                    },
+                    "genderEstimate": {
+                        "$ref": "#/components/schemas/GenderEstimate"
+                    },
+                    "race": {
+                        "$ref": "#/components/schemas/Race"
+                    },
+                    "raceEstimate": {
+                        "$ref": "#/components/schemas/RaceEstimate"
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/Country"
+                    },
+                    "countryEstimate": {
+                        "$ref": "#/components/schemas/CountryEstimate"
+                    }
+                }
+            },
+            "HumanNameMultiparseResponse": {
+                "type": "object",
+                "description": "A response from the `multiparseHumanNames` endpoint.",
+                "properties": {
+                    "confidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the matches are the correct parse among all valid, successful parses for these names"
+                    },
+                    "names": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/HumanNameMultiparseNameMatch"
+                        }
+                    }
+                }
+            },
+            "HumanNameMultiparseBulkResponse": {
+                "type": "object",
+                "description": "A response from the `multiparseHumanNamesBulk` endpoint.",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/HumanNameMultiparseBulkResponseItem"
+                        }
+                    }
+                }
+            },
+            "HumanNameMultiparseBulkResponseItem": {
+                "type": "object",
+                "description": "One response in a `HumanNameMultiparseBulkResponse`.",
+                "required": [
+                    "id",
+                    "response"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the corresponding operation in the bulk request.",
+                        "example": 1,
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "response": {
+                        "$ref": "#/components/schemas/HumanNameMultiparseResponse"
+                    }
+                }
+            },
+            "HumanNameAnalyzeRequest": {
+                "type": "object",
+                "description": "A request to the `analyzeHumanName` endpoint",
+                "required": [
+                    "givenName",
+                    "familyName"
+                ],
+                "properties": {
+                    "givenName": {
+                        "type": "string",
+                        "description": "The given name to analyze",
+                        "example": "Fox",
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "familyName": {
+                        "type": "string",
+                        "description": "The family name to analyze",
+                        "example": "Mulder",
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "countryHint": {
+                        "$ref": "#/components/schemas/Country",
+                        "description": "An optional suggestion for the country of origin. If given, then the named person is assumed to come from the given country regardless of the computed country estimate. This can affect the downstream age, gender, and race estimates also returned by this endpoint."
+                    }
+                }
+            },
+            "HumanNameAnalyzeBulkRequest": {
+                "type": "object",
+                "description": "A request to the `analyzeHumanNameBulk` endpoint.",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 10,
+                        "nullable": false,
+                        "items": {
+                            "$ref": "#/components/schemas/HumanNameAnalyzeBulkRequestItem"
+                        }
+                    }
+                }
+            },
+            "HumanNameAnalyzeBulkRequestItem": {
+                "type": "object",
+                "description": "One request in a `HumanNameAnalyzeBulkRequest`.",
+                "required": [
+                    "id",
+                    "request"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "An identifier for this item within its bulk request. Must be unique among all items in the request.",
+                        "example": 1,
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "request": {
+                        "$ref": "#/components/schemas/HumanNameAnalyzeRequest"
+                    }
+                }
+            },
+            "HumanNameAnalyzeResponse": {
+                "type": "object",
+                "description": "A response to the `analyzeHumanName` endpoint",
+                "properties": {
+                    "givenNameConfidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the given name match is the correct parse among all valid, successful parses for this given name"
+                    },
+                    "givenNameMatch": {
+                        "$ref": "#/components/schemas/HumanNamePart",
+                        "description": "The match for the given name"
+                    },
+                    "familyNameConfidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the family name match is the correct parse among all valid, successful parses for this family name"
+                    },
+                    "familyNameMatch": {
+                        "$ref": "#/components/schemas/HumanNamePart",
+                        "description": "The match for the family name"
+                    },
+                    "age": {
+                        "$ref": "#/components/schemas/Age"
+                    },
+                    "ageEstimate": {
+                        "$ref": "#/components/schemas/AgeEstimate"
+                    },
+                    "gender": {
+                        "$ref": "#/components/schemas/Gender"
+                    },
+                    "genderEstimate": {
+                        "$ref": "#/components/schemas/GenderEstimate"
+                    },
+                    "race": {
+                        "$ref": "#/components/schemas/Race"
+                    },
+                    "raceEstimate": {
+                        "$ref": "#/components/schemas/RaceEstimate"
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/Country"
+                    },
+                    "countryEstimate": {
+                        "$ref": "#/components/schemas/CountryEstimate"
+                    }
+                }
+            },
+            "HumanNameAnalyzeBulkResponse": {
+                "type": "object",
+                "description": "A response from the `analyzeHumanNameBulk` endpoint.",
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/HumanNameAnalyzeBulkResponseItem"
+                        }
+                    }
+                }
+            },
+            "HumanNameAnalyzeBulkResponseItem": {
+                "type": "object",
+                "description": "One response in a `HumanNameAnalyzeBulkResponse`.",
+                "required": [
+                    "id",
+                    "response"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the corresponding operation in the bulk request.",
+                        "example": 1,
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "nullable": false
+                    },
+                    "response": {
+                        "$ref": "#/components/schemas/HumanNameAnalyzeResponse"
+                    }
+                }
+            },
+            "HumanNamePartType": {
+                "type": "string",
+                "description": "* `initial` - A single-letter abbreviation of a name, e.g., \"J.\" in \"J. Edgar Hoover.\" All of given, middle, and family names can be initials.\n* `single` - A single-barreled, or non-hyphenated, name, e.g., \"Hoover\" in \"J. Edgar Hoover.\" Most name parts are of this type.\n* `double` - A [double-barreled](https://en.wikipedia.org/wiki/Double-barrelled_name), or hyphenated, name, e.g., \"Louis-Dreyfus\" in \"Julia Louis-Dreyfus.\" Both given names and family names may be double-barreled.\n* `free` - HumanGraphics uses a statistical name parser, so most name parts are backed by statistical evidence. However, names are not a \"closed\" system, so rare names, new names, and novel spellings of existing names all must be matched. Therefore, \"free\" name parts that \"look like\" part of a name can be accepted based on syntax as opposed to training.\n* `nick` - A sobriquet enclosed in quote marks (i.e., 'single quotes', \"double quotes\", «guillemets», etc.), e.g., \"Maverick\" in \"Pete 'Maverick' Mitchell.\"\n",
+                "enum": [
+                    "initial",
+                    "single",
+                    "double",
+                    "free",
+                    "nick"
+                ]
+            },
+            "HumanNamePart": {
+                "type": "object",
+                "description": "One part of a name match",
+                "required": [
+                    "type",
+                    "matchedText"
+                ],
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/HumanNamePartType",
+                        "description": "The type of this name part, e.g., `initial`"
+                    },
+                    "matchedText": {
+                        "description": "The portion of text from the given input that was matched to this name",
+                        "type": "string",
+                        "example": "fox",
+                        "maxLength": 80
+                    },
+                    "initialHumanNamePartAttributes": {
+                        "$ref": "#/components/schemas/InitialHumanNamePartAttributes"
+                    },
+                    "singleBarreledHumanNamePartAttributes": {
+                        "$ref": "#/components/schemas/SingleBarreledHumanNamePartAttributes"
+                    },
+                    "doubleBarreledHumanNamePartAttributes": {
+                        "$ref": "#/components/schemas/DoubleBarreledHumanNamePartAttributes"
+                    },
+                    "nicknameHumanNamePartAttributes": {
+                        "$ref": "#/components/schemas/NicknameHumanNamePartAttributes"
+                    },
+                    "freeHumanNamePartAttributes": {
+                        "$ref": "#/components/schemas/FreeHumanNamePartAttributes"
+                    }
+                }
+            },
+            "InitialHumanNamePartAttributes": {
+                "type": "object",
+                "description": "A single-letter abbreviation of a name, e.g., \"J.\" in \"J. Edgar Hoover.\" All of given, middle, and family names can be initials.\n",
+                "properties": {}
+            },
+            "SingleBarreledHumanNamePartAttributes": {
+                "type": "object",
+                "description": "A single-barreled, or non-hyphenated, name, e.g., \"Hoover\" in \"J. Edgar Hoover.\" Most name parts are of this type.\n",
+                "properties": {}
+            },
+            "DoubleBarreledHumanNameSubpart": {
+                "type": "object",
+                "description": "One part of a name match",
+                "required": [
+                    "type",
+                    "matchedText"
+                ],
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/HumanNamePartType",
+                        "description": "The type of this name part, e.g., `single`"
+                    },
+                    "matchedText": {
+                        "description": "The portion of text from the given input that was matched to this name",
+                        "type": "string",
+                        "example": "fox",
+                        "maxLength": 80
+                    },
+                    "singleBarreledHumanNamePartAttributes": {
+                        "$ref": "#/components/schemas/SingleBarreledHumanNamePartAttributes"
+                    }
+                }
+            },
+            "DoubleBarreledHumanNamePartAttributes": {
+                "type": "object",
+                "description": "A [double-barreled](https://en.wikipedia.org/wiki/Double-barrelled_name), or hyphenated, name, e.g., \"Louis-Dreyfus\" in \"Julia Louis-Dreyfus.\" Both given names and family names may be double-barreled. The `firstPart` and `secondPart` properties both contain a `HumanNamePart` of type `single`.\n",
+                "required": [
+                    "firstPart",
+                    "secondPart"
+                ],
+                "properties": {
+                    "firstPart": {
+                        "$ref": "#/components/schemas/DoubleBarreledHumanNameSubpart"
+                    },
+                    "secondPart": {
+                        "$ref": "#/components/schemas/DoubleBarreledHumanNameSubpart"
+                    }
+                }
+            },
+            "NicknameHumanNamePartAttributes": {
+                "type": "object",
+                "description": "A sobriquet enclosed in quote marks (i.e., 'single quotes', \"double quotes\", «guillemets», etc.), e.g., \"Maverick\" in \"Pete 'Maverick' Mitchell.\"\n",
+                "properties": {}
+            },
+            "FreeHumanNamePartAttributes": {
+                "type": "object",
+                "description": "HumanGraphics uses a statistical name parser, so most name parts are backed by statistical evidence. However, names are not a \"closed\" system, so rare names, new names, and novel spellings of existing names all must be matched. Therefore, \"free\" name parts that \"look like\" part of a name can be accepted based on syntax as opposed to training.\n",
+                "properties": {}
+            },
+            "HumanNameMatch": {
+                "type": "object",
+                "description": "A match of one human name",
+                "example": {
+                    "template": {
+                        "text": "<GIVEN_NAME> <FAMILY_NAME>"
+                    },
+                    "givenName": {
+                        "matchedText": "fox"
+                    },
+                    "familyName": {
+                        "matchedText": "mulder"
+                    }
+                },
+                "properties": {
+                    "template": {
+                        "$ref": "#/components/schemas/HumanNameTemplatePreview",
+                        "description": "The syntax of the matched name"
+                    },
+                    "givenName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "middleName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "secondMiddleName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "nickName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "familyName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    },
+                    "secondFamilyName": {
+                        "$ref": "#/components/schemas/HumanNamePart"
+                    }
+                }
+            },
+            "HumanNameTemplatePreview": {
+                "type": "object",
+                "description": "The name syntax that was matched during this parse",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "maxLength": 240,
+                        "example": "<GIVEN_NAME> <MIDDLE_NAME> <FAMILY_NAME>"
+                    }
+                }
+            },
+            "ImageType": {
+                "type": "string",
+                "description": "* `binary` - An image provided as base64-encoded binary data in the request\n",
+                "enum": [
+                    "binary"
+                ]
+            },
+            "Image": {
+                "type": "object",
+                "required": [
+                    "type"
+                ],
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/ImageType"
+                    },
+                    "binaryImageAttributes": {
+                        "$ref": "#/components/schemas/BinaryImageAttributes"
+                    }
+                },
+                "example": {
+                    "type": "binary",
+                    "binaryImageAttributes": {
+                        "bytes": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBIMDBIJEhIKCRIK..."
+                    }
+                }
+            },
+            "BinaryImageAttributes": {
+                "type": "object",
+                "required": [
+                    "bytes"
+                ],
+                "properties": {
+                    "bytes": {
+                        "type": "string",
+                        "format": "byte",
+                        "description": "The image represented as base64-encoded binary data. The original image may not exceed 1 MiB in size.",
+                        "maxLength": 1048576,
+                        "example": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBIMDBIJEhIKCRIK..."
+                    }
+                }
+            },
+            "ImageFormat": {
+                "type": "string",
+                "enum": [
+                    "jpeg",
+                    "png"
+                ]
+            },
+            "ImageDescription": {
+                "type": "object",
+                "properties": {
+                    "format": {
+                        "$ref": "#/components/schemas/ImageFormat",
+                        "description": "The detected format of the given image"
+                    },
+                    "width": {
+                        "description": "The detected width of the given image, in pixels",
+                        "type": "integer",
+                        "format": "int32",
+                        "example": 640
+                    },
+                    "height": {
+                        "description": "The detected height of the given image, in pixels",
+                        "type": "integer",
+                        "format": "int32",
+                        "example": 480
+                    }
+                }
+            },
+            "ImageRegion": {
+                "type": "object",
+                "description": "A region of an image described as a rectangle aligned with the x and y axes. The coordinate system starts at the top-left corner, with x increasing in the left-to-right direction and y increasing in the top-to-bottom direction.",
+                "required": [
+                    "x",
+                    "y",
+                    "width",
+                    "height"
+                ],
+                "properties": {
+                    "x": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "The leftmost boundary of this rectangle, inclusive.",
+                        "minimum": 0,
+                        "nullable": false,
+                        "example": 100
+                    },
+                    "y": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "The topmost boundary of this rectangle, inclusive.",
+                        "minimum": 0,
+                        "nullable": false,
+                        "example": 100
+                    },
+                    "width": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "The width of the rectangle, from left to right. The rightmost boundary of this rectangle is `x + width`, exclusive.",
+                        "minimum": 1,
+                        "nullable": false,
+                        "example": 200
+                    },
+                    "height": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "The height of the rectangle, from top to bottom. The bottommost boundary of this rectangle is `y + height`, exclusive.",
+                        "minimum": 1,
+                        "nullable": false,
+                        "example": 200
+                    }
+                }
+            },
+            "DetectedHumanFace": {
+                "type": "object",
+                "description": "A region of an image containing a likely human face",
+                "properties": {
+                    "region": {
+                        "$ref": "#/components/schemas/ImageRegion"
+                    }
+                }
+            },
+            "HumanFaceDetectRequest": {
+                "type": "object",
+                "description": "A request to the `detectHumanFaces` endpoint",
+                "required": [
+                    "image"
+                ],
+                "properties": {
+                    "image": {
+                        "$ref": "#/components/schemas/Image"
+                    }
+                }
+            },
+            "HumanFaceDetectResponse": {
+                "type": "object",
+                "description": "A response from the `detectHumanFaces` endpoint.",
+                "properties": {
+                    "image": {
+                        "$ref": "#/components/schemas/ImageDescription"
+                    },
+                    "detectedFaces": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DetectedHumanFace"
+                        }
+                    }
+                }
+            },
+            "HumanFaceAnalyzeRequest": {
+                "type": "object",
+                "description": "A request to the `analyzeHumanFace` endpoint",
+                "required": [
+                    "image"
+                ],
+                "properties": {
+                    "image": {
+                        "$ref": "#/components/schemas/Image"
+                    },
+                    "region": {
+                        "$ref": "#/components/schemas/ImageRegion"
+                    }
+                }
+            },
+            "HumanFaceAnalyzeResponse": {
+                "type": "object",
+                "description": "A response to the `analyzeHumanFace` endpoint",
+                "properties": {
+                    "outcome": {
+                        "$ref": "#/components/schemas/AnalyzeHumanFaceOutcome"
+                    },
+                    "confidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the analyzed region actually contains a face, as opposed to a different object that resembles a face."
+                    },
+                    "age": {
+                        "$ref": "#/components/schemas/Age"
+                    },
+                    "ageEstimate": {
+                        "$ref": "#/components/schemas/AgeEstimate"
+                    },
+                    "gender": {
+                        "$ref": "#/components/schemas/Gender"
+                    },
+                    "genderEstimate": {
+                        "$ref": "#/components/schemas/GenderEstimate"
+                    },
+                    "race": {
+                        "$ref": "#/components/schemas/Race"
+                    },
+                    "raceEstimate": {
+                        "$ref": "#/components/schemas/RaceEstimate"
+                    }
+                }
+            },
+            "AnalyzeHumanRequest": {
+                "type": "object",
+                "description": "A request to the `analyzeHuman` endpoint. At least one of `locationNameText`, `humanNameText`, and `humanFaceImage` must be given.",
+                "properties": {
+                    "locationNameText": {
+                        "type": "string",
+                        "description": "The location name to parse",
+                        "example": "Alexandria, VA",
+                        "maxLength": 240
+                    },
+                    "humanNameText": {
+                        "type": "string",
+                        "description": "The human name to parse",
+                        "example": "Fox Mulder",
+                        "maxLength": 240
+                    },
+                    "humanFaceImage": {
+                        "$ref": "#/components/schemas/Image",
+                        "description": "An image containing one or more human faces"
+                    },
+                    "humanFaceRegion": {
+                        "$ref": "#/components/schemas/ImageRegion",
+                        "description": "A region of the given image containing face to analyze. If the image contains exactly one face, then this field is optional. If the image contains more than one face, then this field is required in order for the face analysis to succeed. If given, this value should match a region returned from the `detectHumanFaces` endpoint exactly."
+                    },
+                    "hl": {
+                        "type": "string",
+                        "maxLength": 2,
+                        "description": "The primary language in which to return labels. The language should be provided as an [ISO 639-1 code](https://en.wikipedia.org/wiki/ISO_639-1). If provided, then the first name of each location will be in the given language, if such a name exists. Names in other languages may also be included in the response. Unrecognized languages are ignored."
+                    }
+                }
+            },
+            "AnalyzeHumanFaceOutcome": {
+                "type": "string",
+                "description": "* `success` - The analysis of the indicated or only face in the image succeeded.\n* `failureNoSuchFace` - There is no face in the given image at the given region\n* `failureNoFaces` - The analysis failed because either (a) there are no faces in the image, or (b) there is no face in the given region.\n* `failureTooManyFaces` - The analysis failed because there is more than one face in the given image, or in the indicated region of the given image.\n* `failureBadImage` - The analysis failed because the image could not be understood.\n",
+                "enum": [
+                    "success",
+                    "failureNoSuchFace",
+                    "failureNoFaces",
+                    "failureTooManyFaces",
+                    "failureBadImage"
+                ]
+            },
+            "AnalyzeHumanResponse": {
+                "type": "object",
+                "description": "A response from the `analyzeHuman` endpoint",
+                "properties": {
+                    "locationNameConfidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the location match is the correct parse among all valid, successful parses for this location"
+                    },
+                    "locationNameMatch": {
+                        "$ref": "#/components/schemas/LocationNameMatch"
+                    },
+                    "humanNameConfidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the name match is the correct parse among all valid, successful parses for this name"
+                    },
+                    "humanNameMatch": {
+                        "$ref": "#/components/schemas/HumanNameMatch"
+                    },
+                    "humanFaceOutcome": {
+                        "$ref": "#/components/schemas/AnalyzeHumanFaceOutcome"
+                    },
+                    "humanFaceConfidence": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.937,
+                        "description": "The likelihood that the analyzed region actually contains a face, as opposed to a different object that resembles a face."
+                    },
+                    "age": {
+                        "$ref": "#/components/schemas/Age"
+                    },
+                    "ageEstimate": {
+                        "$ref": "#/components/schemas/AgeEstimate"
+                    },
+                    "gender": {
+                        "$ref": "#/components/schemas/Gender"
+                    },
+                    "genderEstimate": {
+                        "$ref": "#/components/schemas/GenderEstimate"
+                    },
+                    "race": {
+                        "$ref": "#/components/schemas/Race"
+                    },
+                    "raceEstimate": {
+                        "$ref": "#/components/schemas/RaceEstimate"
+                    },
+                    "country": {
+                        "$ref": "#/components/schemas/Country"
+                    },
+                    "countryEstimate": {
+                        "$ref": "#/components/schemas/CountryEstimate"
+                    }
+                }
+            },
+            "CountryEstimate": {
+                "type": "object",
+                "description": "A discrete probability distribution modeling one person's likely country of origin. Keys are [ISO 3166-1 alpha-2 codes](https://en.wikipedia.org/wiki/ISO_3166-1), e.g., `US`.",
+                "example": {
+                    "US": 0.53,
+                    "CA": 0.27,
+                    "GB": 0.18
+                },
+                "additionalProperties": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            },
+            "Age": {
+                "type": "string",
+                "description": "A person's age in whole years",
+                "example": "from25To34",
+                "enum": [
+                    "under18",
+                    "from18To24",
+                    "from25To34",
+                    "from35To44",
+                    "from45To54",
+                    "from55To64",
+                    "over65"
+                ]
+            },
+            "AgeEstimate": {
+                "type": "object",
+                "description": "A discrete probability distribution modeling one person's likely age",
+                "example": {
+                    "from25To34": 0.27,
+                    "from18To24": 0.25,
+                    "from35To44": 0.18,
+                    "from45To54": 0.1,
+                    "under18": 0.1,
+                    "from55To64": 0.08,
+                    "over65": 0.02
+                },
+                "properties": {
+                    "under18": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "from18To24": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "from25To34": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "from35To44": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "from45To54": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "from55To64": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "over65": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    }
+                }
+            },
+            "Gender": {
+                "type": "string",
+                "description": "One person's [gender](https://en.wikipedia.org/wiki/Gender",
+                "example": "male",
+                "enum": [
+                    "male",
+                    "female"
+                ]
+            },
+            "GenderEstimate": {
+                "type": "object",
+                "description": "A discrete probability distribution modeling one person's likely self-identified gender",
+                "example": {
+                    "male": 0.9,
+                    "female": 0.1
+                },
+                "properties": {
+                    "male": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "female": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    }
+                }
+            },
+            "Race": {
+                "type": "string",
+                "description": "One person's [race](https://en.wikipedia.org/wiki/Race_%28human_categorization%29). These values follow [the labels and definitions laid out in the 2010 US Census](https://www.census.gov/content/dam/Census/library/publications/2011/dec/c2010br-02.pdf), and can be interpreted as:\n\n* `white` - Non-Hispanic White Alone\n* `black` - Non-Hispanic Black or African American Alone,\n* `asianPacificIslander` - Non-Hispanic American Indian and Alaska Native Alone\n* `americanIndian` - Non-Hispanic Asian and Native Hawaiian and Other Pacific Islander Alone\n* `twoPlusRaces` - Non-Hispanic Two or More Races\n* `hispanic` - Hispanic or Latino origin\n",
+                "example": "white",
+                "enum": [
+                    "white",
+                    "black",
+                    "asianPacificIslander",
+                    "americanIndian",
+                    "twoPlusRaces",
+                    "hispanic"
+                ]
+            },
+            "RaceEstimate": {
+                "type": "object",
+                "description": "A discrete probability distribution modeling one person's likely race",
+                "example": {
+                    "white": 0.5,
+                    "hispanic": 0.2,
+                    "americanIndian": 0.1,
+                    "asianPacificIslander": 0.08,
+                    "twoPlusRaces": 0.07,
+                    "black": 0.05
+                },
+                "properties": {
+                    "hispanic": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "white": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "black": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "asianPacificIslander": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "americanIndian": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    },
+                    "twoPlusRaces": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 1
+                    }
+                }
+            }
+        }
+    }
+}
