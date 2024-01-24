@@ -35,6 +35,11 @@
       "description": "Perform basic utility functions"
     }
   ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "paths": {
     "/v1/ping": {
       "get": {
@@ -605,6 +610,12 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
     "responses": {
       "401Unauthorized": {
         "description": "The request did not include valid credentials",
