@@ -2,11 +2,11 @@
   "openapi": "3.0.3",
   "info": {
     "title": "HumanGraphics API",
-    "description": "[HumanGraphics](https://www.humangraphics.io) is a family of products designed to create structured data from unstructured human characteristics and behavior.\n\n# Endpoints\n\nThe API currently provides the following high-level operations:\n\n## Name Parsing and Analysis\n\nThe endpoints with the Names tag take unstructured human names and parse them into a structured representation of the name. In addition, for each parsed name, the endpoints also provide demographic estimates about the named person's country of origin and gender (for all geographies); plus age and race (for some geographies only).\n\n## Location Resolution and Analysis\n\nThe endpoints with the Locations tag take unstructured location names and resolve them into a structured representation of the location. Location resolution provides only city-level granularity at this time, so it is not suitable for the geocoding of addresses.\n\n## Face Analysis\n\nThe endpoints with the Faces tag take image data and recognized and/or analyze human face(s) in the given image. Facial analysis returns structured estimates of the age, gender, and race of the person.\n\n## Combined Analysis\n\nVarious endpoints allow users to provide multiple data points about a person, for example their name and face, to create a more detailed ensemble estimate of the person's demographic profile that is richer and more accurate than analysis from one data point alone.\n\n# Usage Tracking\n\nThe HumanGraphics API usage is tracked in \"credits,\" which are purchased on a subscription basis. Each endpoint's cost in credits is captured in its respective documentation. Non-2XX responses count against rate limits, but are billed at zero credits. Note that 2XX responses can still return no data (e.g., name match failure) and are still billed as documented. Bulk endpoints count as one call for rate limiting purposes, but multiple credits depending on request size.\n",
+    "description": "[HumanGraphics](https://www.humangraphics.io) is a family of products designed to create structured data from unstructured human characteristics and behavior.\n\n# Endpoints\n\nThe API currently provides the following high-level operations:\n\n## Name Parsing and Analysis\n\nThe endpoints with the Names tag take unstructured human names and parse them into a structured representation of the name. In addition, for each parsed name, the endpoints also provide demographic estimates about the named person's country of origin and gender (for all geographies); plus age and race (for some geographies only).\n\n## Location Resolution and Analysis\n\nThe endpoints with the Locations tag take unstructured location names and resolve them into a structured representation of the location. Location resolution provides only city-level granularity at this time, so it is not suitable for the geocoding of addresses.\n\n## Face Analysis\n\nThe endpoints with the Faces tag take image data and recognize and/or analyze human face(s) in the given image. Facial analysis returns structured estimates of the age, gender, and race of the person.\n\n## Combined Analysis\n\nVarious endpoints allow users to provide multiple data points about a person, for example their name and face, to create a more detailed ensemble estimate of the person's demographic profile that is richer and more accurate than analysis from one data point alone.\n\n## Social Media Profile Analysis\n\nThe endpoints with the Social Profile tag take social media profile account identifiers, for example a user ID or a handle, and return a full panel of demographic estimates for the profile, if it exists, by analyzing its name, location, and profile picture.\n\n# Usage Tracking\n\nThe HumanGraphics API usage is tracked in \"credits,\" which are purchased on a subscription basis. Each endpoint's cost in credits is captured in its respective documentation. Non-2XX responses count against rate limits, but are billed at zero credits. Note that 2XX responses can still return no data (e.g., name match failure) and are still billed as documented. Bulk endpoints count as one call for rate limiting purposes, but multiple credits depending on request size.\n",
     "contact": {
       "email": "api@humangraphics.io"
     },
-    "version": "1.3.0"
+    "version": "1.4.0"
   },
   "servers": [
     {
@@ -29,6 +29,10 @@
     {
       "name": "Locations",
       "description": "Process location data"
+    },
+    {
+      "name": "Social Profiles",
+      "description": "Process social media profiles"
     },
     {
       "name": "Utility",
@@ -572,7 +576,7 @@
           "Names",
           "Faces"
         ],
-        "summary": "Analyze a person's name, location, and image together (3-5 credits)",
+        "summary": "Analyze a person's name, location, and image together (1-5 credits)",
         "description": "Analyze a person, as described by their name, location, and/or a picture containing only their face. Any combination of the above inputs may be given, except none. Estimates for their age, gender, race, and country are combined to produce one estimate based on all these data.\n\nCost: The sum of the below for inputs included.\n\n* Name: 1 credit\n* Location: 1 credit\n* Face: 3 credits\n\nSo, a call that includes all 3 inputs costs 5 credits.\n",
         "operationId": "analyzeHuman",
         "requestBody": {
@@ -592,6 +596,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AnalyzeHumanResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/403Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/422UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/v1/social/profiles/twitter/analyze": {
+      "post": {
+        "tags": [
+          "Social Profiles"
+        ],
+        "summary": "Analyze a Twitter social media profile (5-10 credits)",
+        "description": "Analyze a Twitter social media profile, as identified by its ID or handle. If both the ID and the handle are given, then the ID is used. Analyses of the name, location, and picture fields are combined to produce a single estimate of the profile owner's age, gender, race, and country.\n\nCost: The sum of the below for inputs included.\n\n* Base cost: 5 credits\n* Name: 1 credit\n* Location: 1 credit\n* Face: 3 credits\n\nUsers are only billed for those fields which are populated in the profile. So, a call for a profile with the name populated but the location and profile pictures blank would cost 5+1 = 6 credits.\n",
+        "operationId": "analyzeTwitterSocialMediaProfile",
+        "requestBody": {
+          "description": "The social media profile identifier of the Twitter account to analyze",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeTwitterSocialProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The analysis procedure completed successfully. It still may not have produced an analysis.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeSocialProfileResponse"
                 }
               }
             }
@@ -2203,6 +2248,190 @@
             "maximum": 1
           }
         }
+      },
+      "AnalyzeTwitterSocialProfileRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The numerical ID of the Twitter account to analyze. Only one of `id` and `handle` should be given. If both `id` and `handle` are given, then `id` is used.",
+            "maxLength": 80,
+            "example": "17919972"
+          },
+          "handle": {
+            "type": "string",
+            "description": "The user-readable screen name of the Twitter account to analyze. Only one of `id` and `handle` should be given.",
+            "maxLength": 80,
+            "example": "taylorswift13"
+          }
+        }
+      },
+      "AnalyzeSocialProfileResponse": {
+        "type": "object",
+        "properties": {
+          "socialProfileExists": {
+            "type": "boolean",
+            "description": "Whether or not the requested social profile exists."
+          },
+          "socialProfile": {
+            "$ref": "#/components/schemas/SocialProfile"
+          },
+          "socialProfileImage": {
+            "$ref": "#/components/schemas/Image"
+          },
+          "locationNameConfidence": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1,
+            "example": 0.937,
+            "description": "The likelihood that the location match is the correct parse among all valid, successful parses for this location"
+          },
+          "locationNameMatch": {
+            "$ref": "#/components/schemas/LocationNameMatch"
+          },
+          "humanNameConfidence": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1,
+            "example": 0.937,
+            "description": "The likelihood that the name match is the correct parse among all valid, successful parses for this name"
+          },
+          "humanNameMatch": {
+            "$ref": "#/components/schemas/HumanNameMatch"
+          },
+          "humanFaceOutcome": {
+            "$ref": "#/components/schemas/AnalyzeHumanFaceOutcome"
+          },
+          "humanFaceConfidence": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 1,
+            "example": 0.937,
+            "description": "The likelihood that the analyzed region actually contains a face, as opposed to a different object that resembles a face."
+          },
+          "age": {
+            "$ref": "#/components/schemas/Age"
+          },
+          "ageEstimate": {
+            "$ref": "#/components/schemas/AgeEstimate"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "genderEstimate": {
+            "$ref": "#/components/schemas/GenderEstimate"
+          },
+          "race": {
+            "$ref": "#/components/schemas/Race"
+          },
+          "raceEstimate": {
+            "$ref": "#/components/schemas/RaceEstimate"
+          },
+          "country": {
+            "$ref": "#/components/schemas/Country"
+          },
+          "countryEstimate": {
+            "$ref": "#/components/schemas/CountryEstimate"
+          }
+        }
+      },
+      "SocialProfilePreview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 80,
+            "example": 1234567890
+          },
+          "handle": {
+            "type": "string",
+            "maxLength": 80,
+            "example": "FoxMulder"
+          }
+        }
+      },
+      "SocialProfileVisibility": {
+        "type": "string",
+        "description": "One social profile's access level, which can take the following values:\n\n* `public` - The account is public and fully accessible to all users\n* `private` - The account is private and accessible only to a limited group\n* `protected` - The account is public but only partially accessible to all users\n",
+        "enum": [
+          "public",
+          "private",
+          "protected"
+        ]
+      },
+      "SocialProfile": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SocialProfilePreview"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "Fox Mulder",
+                "maxLength": 80
+              },
+              "location": {
+                "type": "string",
+                "example": "Alexandria, VA",
+                "maxLength": 80
+              },
+              "biography": {
+                "type": "string",
+                "example": "I want to believe 🛸",
+                "maxLength": 160
+              },
+              "picture": {
+                "type": "string",
+                "format": "url"
+              },
+              "homepage": {
+                "type": "string",
+                "example": "https://en.wikipedia.org/wiki/The_X-Files",
+                "format": "url"
+              },
+              "visibility": {
+                "$ref": "#/components/schemas/SocialProfileVisibility"
+              },
+              "verified": {
+                "type": "boolean",
+                "example": true
+              },
+              "posts": {
+                "type": "integer",
+                "example": 1234,
+                "format": "int64"
+              },
+              "followers": {
+                "type": "integer",
+                "example": 3456,
+                "format": "int64"
+              },
+              "following": {
+                "type": "integer",
+                "example": 2345,
+                "format": "int64"
+              },
+              "likes": {
+                "type": "integer",
+                "example": 3,
+                "format": "int64"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "activeAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
       }
     }
   }
