@@ -619,7 +619,6 @@
     "/v1/social/profiles/instagram/analyze": {
       "post": {
         "tags": [
-          "Social Profiles",
           "Beta"
         ],
         "summary": "Analyze an Instagram social media profile (5-9 credits)",
@@ -661,7 +660,6 @@
     "/v1/social/profiles/tiktok/analyze": {
       "post": {
         "tags": [
-          "Social Profiles",
           "Beta"
         ],
         "summary": "Analyze a TikTok social media profile (5-9 credits)",
@@ -703,7 +701,6 @@
     "/v1/social/profiles/threads/analyze": {
       "post": {
         "tags": [
-          "Social Profiles",
           "Beta"
         ],
         "summary": "Analyze a Threads social media profile (5-9 credits)",
@@ -745,7 +742,6 @@
     "/v1/social/profiles/twitter/analyze": {
       "post": {
         "tags": [
-          "Social Profiles",
           "Beta"
         ],
         "summary": "Analyze a Twitter social media profile (5-10 credits)",
