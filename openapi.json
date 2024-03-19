@@ -2,11 +2,11 @@
   "openapi": "3.0.3",
   "info": {
     "title": "HumanGraphics API",
-    "description": "[HumanGraphics](https://www.humangraphics.io) is a family of products designed to create structured data from unstructured human characteristics and behavior.\n\n# Endpoints\n\nThe API currently provides the following high-level operations:\n\n## Name Parsing and Analysis\n\nThe endpoints with the Names tag take unstructured human names and parse them into a structured representation of the name. In addition, for each parsed name, the endpoints also provide demographic estimates about the named person's country of origin and gender (for all geographies); plus age and race (for some geographies only).\n\n## Location Resolution and Analysis\n\nThe endpoints with the Locations tag take unstructured location names and resolve them into a structured representation of the location. Location resolution provides only city-level granularity at this time, so it is not suitable for the geocoding of addresses.\n\n## Face Analysis\n\nThe endpoints with the Faces tag take image data and recognize and/or analyze human face(s) in the given image. Facial analysis returns structured estimates of the age, gender, and race of the person.\n\n## Combined Analysis\n\nVarious endpoints allow users to provide multiple data points about a person, for example their name and face, to create a more detailed ensemble estimate of the person's demographic profile that is richer and more accurate than analysis from one data point alone.\n\n## Social Media Profile Analysis\n\nThe endpoints with the Social Profile tag take social media profile account identifiers, for example a user ID or a handle, and return a full panel of demographic estimates for the profile, if it exists, by analyzing its name, location, and profile picture.\n\n# Usage Tracking\n\nThe HumanGraphics API usage is tracked in \"credits,\" which are purchased on a subscription basis. Each endpoint's cost in credits is captured in its respective documentation. Non-2XX responses count against rate limits, but are billed at zero credits. Note that 2XX responses can still return no data (e.g., name match failure) and are still billed as documented. Bulk endpoints count as one call for rate limiting purposes, but multiple credits depending on request size.\n",
+    "description": "[HumanGraphics](https://www.humangraphics.io) is a family of products designed to create structured data from unstructured human characteristics and behavior.\n\n# Endpoints\n\nThe API currently provides the following high-level operations:\n\n## Name Parsing and Analysis\n\nThe endpoints with the Names tag take unstructured human names and parse them into a structured representation of the name. In addition, for each parsed name, the endpoints also provide demographic estimates about the named person's country of origin and gender (for all geographies); plus age and race (for some geographies only).\n\n## Location Resolution and Analysis\n\nThe endpoints with the Locations tag take unstructured location names and resolve them into a structured representation of the location. Location resolution provides only city-level granularity at this time, so it is not suitable for the geocoding of addresses.\n\n## Face Analysis\n\nThe endpoints with the Faces tag take image data and recognize and/or analyze human face(s) in the given image. Facial analysis returns structured estimates of the age, gender, and race of the person.\n\n## Combined Analysis\n\nVarious endpoints allow users to provide multiple data points about a person, for example their name and face, to create a more detailed ensemble estimate of the person's demographic profile that is richer and more accurate than analysis from one data point alone.\n\n## Social Media Profile Analysis\n\nThe endpoints with the Social Profile tag take social media profile account identifiers, for example a user ID or a handle, and return a full panel of demographic estimates for the profile, if it exists, by analyzing its name, location, and profile picture.\n\n## Beta\n\nEndpoints with the Beta tag are in a \"beta\" testing period. These endpoints may experience unexpected outages, and their features, functionality, and performance may change in non-backwards compatible ways without notice.\n\n# Usage Tracking\n\nThe HumanGraphics API usage is tracked in \"credits,\" which are purchased on a subscription basis. Each endpoint's cost in credits is captured in its respective documentation. Non-2XX responses count against rate limits, but are billed at zero credits. Note that 2XX responses can still return no data (e.g., name match failure) and are still billed as documented. Bulk endpoints count as one call for rate limiting purposes, but multiple credits depending on request size.\n",
     "contact": {
       "email": "api@humangraphics.io"
     },
-    "version": "1.4.0"
+    "version": "1.4.2"
   },
   "servers": [
     {
@@ -37,6 +37,10 @@
     {
       "name": "Utility",
       "description": "Perform basic utility functions"
+    },
+    {
+      "name": "Beta",
+      "description": "These endpoints are in a \"beta\" testing period. They may experience unexpected outages, and their features, functionality, and performance may change in non-backwards compatible ways without notice."
     }
   ],
   "security": [
@@ -612,10 +616,137 @@
         }
       }
     },
+    "/v1/social/profiles/instagram/analyze": {
+      "post": {
+        "tags": [
+          "Social Profiles",
+          "Beta"
+        ],
+        "summary": "Analyze an Instagram social media profile (5-9 credits)",
+        "description": "Analyze an Instagram social media profile, as identified by its ID or handle. If both the ID and the handle are given, then the ID is used. Analyses of the name and picture fields are combined to produce a single estimate of the profile owner's age, gender, race, and country.\n\nCost: The sum of the below for inputs included.\n\n* Base cost: 5 credits\n* Name: 1 credit\n* Face: 3 credits\n\nUsers are only billed for those fields which are populated in the profile. So, a call for a profile with the name populated but the location and profile pictures blank would cost 5+1 = 6 credits.\n",
+        "operationId": "analyzeInstagramSocialMediaProfile",
+        "requestBody": {
+          "description": "The social media profile identifier of the Instagram account to analyze",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeInstagramSocialProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The analysis procedure completed successfully. It still may not have produced an analysis.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeSocialProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/403Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/422UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/v1/social/profiles/tiktok/analyze": {
+      "post": {
+        "tags": [
+          "Social Profiles",
+          "Beta"
+        ],
+        "summary": "Analyze a TikTok social media profile (5-9 credits)",
+        "description": "Analyze a TikTok social media profile, as identified by its handle. Analyses of the name and picture fields are combined to produce a single estimate of the profile owner's age, gender, race, and country.\n\nCost: The sum of the below for inputs included.\n\n* Base cost: 5 credits\n* Name: 1 credit\n* Face: 3 credits\n\nUsers are only billed for those fields which are populated in the profile. So, a call for a profile with the name populated but the location and profile pictures blank would cost 5+1 = 6 credits.\n",
+        "operationId": "analyzeTikTokSocialMediaProfile",
+        "requestBody": {
+          "description": "The social media profile identifier of the TikTok account to analyze",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeTikTokSocialProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The analysis procedure completed successfully. It still may not have produced an analysis.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeSocialProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/403Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/422UnprocessableEntity"
+          }
+        }
+      }
+    },
+    "/v1/social/profiles/threads/analyze": {
+      "post": {
+        "tags": [
+          "Social Profiles",
+          "Beta"
+        ],
+        "summary": "Analyze a Threads social media profile (5-9 credits)",
+        "description": "Analyze a Threads social media profile, as identified by its ID or handle. If both the ID and the handle are given, then the ID is used. Analyses of the name and picture fields are combined to produce a single estimate of the profile owner's age, gender, race, and country.\n\nCost: The sum of the below for inputs included.\n\n* Base cost: 5 credits\n* Name: 1 credit\n* Face: 3 credits\n\nUsers are only billed for those fields which are populated in the profile. So, a call for a profile with the name populated but the location and profile pictures blank would cost 5+1 = 6 credits.\n",
+        "operationId": "analyzeThreadsSocialMediaProfile",
+        "requestBody": {
+          "description": "The social media profile identifier of the Threads account to analyze",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeThreadsSocialProfileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The analysis procedure completed successfully. It still may not have produced an analysis.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeSocialProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/401Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/403Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/422UnprocessableEntity"
+          }
+        }
+      }
+    },
     "/v1/social/profiles/twitter/analyze": {
       "post": {
         "tags": [
-          "Social Profiles"
+          "Social Profiles",
+          "Beta"
         ],
         "summary": "Analyze a Twitter social media profile (5-10 credits)",
         "description": "Analyze a Twitter social media profile, as identified by its ID or handle. If both the ID and the handle are given, then the ID is used. Analyses of the name, location, and picture fields are combined to produce a single estimate of the profile owner's age, gender, race, and country.\n\nCost: The sum of the below for inputs included.\n\n* Base cost: 5 credits\n* Name: 1 credit\n* Location: 1 credit\n* Face: 3 credits\n\nUsers are only billed for those fields which are populated in the profile. So, a call for a profile with the name populated but the location and profile pictures blank would cost 5+1 = 6 credits.\n",
@@ -1800,8 +1931,8 @@
           "bytes": {
             "type": "string",
             "format": "byte",
-            "description": "The image represented as base64-encoded binary data. The original image may not exceed 1 MiB in size.",
-            "maxLength": 1048576,
+            "description": "The image represented as base64-encoded binary data. The original image may not exceed 100KB in size.",
+            "maxLength": 100000,
             "example": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHCBIMDBIJEhIKCRIK..."
           }
         }
@@ -1831,6 +1962,23 @@
             "type": "integer",
             "format": "int32",
             "example": 480
+          },
+          "length": {
+            "description": "The number of bytes in the serialized image",
+            "type": "integer",
+            "format": "int64",
+            "example": 15456
+          }
+        }
+      },
+      "ImageAndDescription": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "$ref": "#/components/schemas/Image"
+          },
+          "description": {
+            "$ref": "#/components/schemas/ImageDescription"
           }
         }
       },
@@ -2249,6 +2397,63 @@
           }
         }
       },
+      "SocialNetwork": {
+        "type": "string",
+        "enum": [
+          "instagram",
+          "threads",
+          "tiktok",
+          "twitter"
+        ]
+      },
+      "AnalyzeInstagramSocialProfileRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The numerical ID of the Instagram account to analyze. Only one of `id` and `handle` should be given. If both `id` and `handle` are given, then `id` is used.",
+            "maxLength": 80,
+            "example": "314216"
+          },
+          "handle": {
+            "type": "string",
+            "description": "The user-readable screen name of the Instagram account to analyze. Only one of `id` and `handle` should be given.",
+            "maxLength": 80,
+            "example": "zuck"
+          }
+        }
+      },
+      "AnalyzeThreadsSocialProfileRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The numerical ID of the Threads account to analyze. Only one of `id` and `handle` should be given. If both `id` and `handle` are given, then `id` is used.",
+            "maxLength": 80,
+            "example": "314216"
+          },
+          "handle": {
+            "type": "string",
+            "description": "The user-readable screen name of the Threads account to analyze. Only one of `id` and `handle` should be given.",
+            "maxLength": 80,
+            "example": "zuck"
+          }
+        }
+      },
+      "AnalyzeTikTokSocialProfileRequest": {
+        "type": "object",
+        "required": [
+          "handle"
+        ],
+        "properties": {
+          "handle": {
+            "type": "string",
+            "description": "The user-readable screen name of the TikTok account to analyze.",
+            "maxLength": 80,
+            "example": "edsheeran"
+          }
+        }
+      },
       "AnalyzeTwitterSocialProfileRequest": {
         "type": "object",
         "properties": {
@@ -2276,8 +2481,8 @@
           "socialProfile": {
             "$ref": "#/components/schemas/SocialProfile"
           },
-          "socialProfileImage": {
-            "$ref": "#/components/schemas/Image"
+          "socialProfilePicture": {
+            "$ref": "#/components/schemas/ImageAndDescription"
           },
           "locationNameConfidence": {
             "type": "number",
@@ -2341,6 +2546,9 @@
       "SocialProfilePreview": {
         "type": "object",
         "properties": {
+          "network": {
+            "$ref": "#/components/schemas/SocialNetwork"
+          },
           "id": {
             "type": "string",
             "maxLength": 80,
