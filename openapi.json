@@ -57,6 +57,22 @@
         },
         "description": "Forbidden. This method is not included in the current API plan. To gain access to this method, [upgrade the current plan](https://www.humangraphics.io/pricing) or [contact sales](mailto:sales@humangraphics.io)."
       },
+      "NotAcceptable406": {
+        "content": {
+          "application/json": {
+            "example": {
+              "detail": "HTTP requests must accept responses with 'application/json' content type.",
+              "status": 406,
+              "title": "Not acceptable",
+              "type": "https://www.humangraphics.io/problems/not-acceptable"
+            },
+            "schema": {
+              "$ref": "#/components/schemas/ErrorMessage"
+            }
+          }
+        },
+        "description": "Not acceptable. HTTP requests must accept responses with 'application/json' content type."
+      },
       "TooManyRequests429": {
         "content": {
           "application/json": {
@@ -2009,7 +2025,7 @@
   "info": {
     "description": "[HumanGraphics](https://www.humangraphics.io) is a family of products designed to create structured data from unstructured human characteristics and behavior.\n\n# Endpoints\n\nThe API currently provides the following high-level operations:\n\n## Name Parsing and Analysis\n\nThe endpoints with the Names tag take unstructured human names and parse them into a structured representation of the name. In addition, for each parsed name, the endpoints also provide demographic estimates about the named person's country of origin and gender (for all geographies); plus age and race (for some geographies only).\n\n## Location Resolution and Analysis\n\nThe endpoints with the Locations tag take unstructured location names and resolve them into a structured representation of the location. Location resolution provides only city-level granularity at this time, so it is not suitable for the geocoding of addresses.\n\n## Face Analysis\n\nThe endpoints with the Faces tag take image data and recognize and/or analyze human face(s) in the given image. Facial analysis returns structured estimates of the age, gender, and race of the person.\n\n## Combined Analysis\n\nVarious endpoints allow users to provide multiple data points about a person, for example their name and face, to create a more detailed ensemble estimate of the person's demographic profile that is richer and more accurate than analysis from one data point alone.\n\n## Social Media Profile Analysis\n\nThe endpoints with the Social Profile tag take social media profile account identifiers, for example a user ID or a handle, and return a full panel of demographic estimates for the profile, if it exists, by analyzing its name, location, and profile picture.\n\n## Beta\n\nThe endpoints with the Beta tag are in a \"beta\" testing period. These endpoints are of production quality, but their features, functionality, and performance may change in non-backwards compatible ways without notice.\n\n# Usage Tracking\n\nThe HumanGraphics API usage is tracked in \"credits,\" which are purchased on a subscription basis. Each endpoint's cost in credits is captured in its respective documentation. Non-2XX responses count against rate limits, but are billed at zero credits. Note that 2XX responses can still return no data (e.g., name match failure) and are still billed as documented. Bulk endpoints count as one call for rate limiting purposes, but multiple credits depending on request size.\n",
     "title": "HumanGraphics API",
-    "version": "1.5.3.1"
+    "version": "1.5.3.2"
   },
   "openapi": "3.0.1",
   "paths": {
@@ -2052,6 +2068,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
@@ -2115,6 +2134,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -2174,6 +2196,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
@@ -2235,6 +2260,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -2294,6 +2322,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
@@ -2355,6 +2386,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -2414,6 +2448,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
@@ -2475,6 +2512,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -2534,6 +2574,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
@@ -2595,6 +2638,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -2653,6 +2699,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
@@ -2713,6 +2762,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -2772,6 +2824,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -2812,6 +2867,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
@@ -2869,6 +2927,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
@@ -2929,6 +2990,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -2988,6 +3052,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden403"
           },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
+          },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
           },
@@ -3046,6 +3113,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden403"
+          },
+          "406": {
+            "$ref": "#/components/responses/NotAcceptable406"
           },
           "413": {
             "$ref": "#/components/responses/ContentTooLarge413"
